@@ -1,0 +1,398 @@
+#include <Arduino.h>
+
+#include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+// GUItool: begin automatically generated code
+AudioSynthWaveform       OSC2;        //xy=231,777
+AudioSynthWaveform       OSC1;        //xy=234,661
+AudioSynthWaveform       LFO2;           //xy=281,448
+AudioSynthWaveformDc     lfo2Amt;        //xy=286,373
+AudioMixer4              MixerA;    //xy=426,719
+AudioMixer4              LfoMixer;       //xy=433,429
+AudioAnalyzePeak         lfoPeak;        //xy=569,429
+AudioFilterStateVariable filterA;        //xy=583,724
+AudioEffectEnvelope      envelope1;      //xy=759,715
+AudioOutputI2S           i2s2; //xy=961,726
+AudioConnection          patchCord1(OSC2, 0, MixerA, 1);
+AudioConnection          patchCord2(OSC1, 0, MixerA, 0);
+AudioConnection          patchCord3(LFO2, 0, LfoMixer, 1);
+AudioConnection          patchCord4(lfo2Amt, 0, LfoMixer, 0);
+AudioConnection          patchCord5(MixerA, 0, filterA, 0);
+AudioConnection          patchCord6(LfoMixer, lfoPeak);
+AudioConnection          patchCord7(filterA, 0, envelope1, 0);
+AudioConnection          patchCord8(envelope1, 0, i2s2, 0);
+AudioConnection          patchCord9(envelope1, 0, i2s2, 1);
+AudioControlSGTL5000     sgtl5000_1;     //xy=874,421
+// GUItool: end automatically generated code
+
+
+
+
+
+
+
+ 
+// ----------------------------------------------------------------------------------------
+// PhysMus Demo Synth mit Midi
+// ----------------------------------------------------------------------------------------
+
+#include <Bounce.h>
+#include <MIDI.h>
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+int pot1 = 14;
+int pot2 = 15;
+int pot3 = 16;
+int pot4 = 17;
+int pot5 = 22;
+
+
+int pot1_val = analogRead(pot1);
+int pot2_val;
+int pot3_val;
+int pot4_val = analogRead(pot4);;
+int pot5_val;
+
+
+float osc1_amp;
+float osc2_amp;
+float filt1_freq;
+float lfo2_freq = 0;
+float lfo2_amp;
+float env_att = 50;
+float env_rel = 50;
+
+float lfoMod;
+float lfoMod1;
+float lfoMod2;
+
+
+// values
+int osc_maxValue = 1000;
+int osc_minValue = 60;
+int filt_maxValue = 5000;
+int lfo_freqMax = 10;
+
+int current_waveform_osc1 = 0;
+String current_waveform_osc1_print;
+int current_waveform_osc2 = 0;
+String current_waveform_osc2_print;
+int current_LFOtarget = 0;
+String current_target_lfo_print = "Pitch";
+
+float lfoMod_pitch;
+float lfoMod_filt;
+
+float testVal;
+
+Bounce but1 = Bounce(4, 15);
+Bounce but2 = Bounce(2, 15);
+Bounce but3 = Bounce(1, 15);
+Bounce but4 = Bounce(5, 15);
+
+float noteFreqs[128] = {8.176, 8.662, 9.177, 9.723, 10.301, 10.913, 11.562, 12.25, 12.978, 13.75, 14.568, 15.434, 16.352, 17.324, 18.354, 19.445, 20.602, 21.827, 23.125, 24.5, 25.957, 27.5, 29.135, 30.868, 32.703, 34.648, 36.708, 38.891, 41.203, 43.654, 46.249, 48.999, 51.913, 55, 58.27, 61.735, 65.406, 69.296, 73.416, 77.782, 82.407, 87.307, 92.499, 97.999, 103.826, 110, 116.541, 123.471, 130.813, 138.591, 146.832, 155.563, 164.814, 174.614, 184.997, 195.998, 207.652, 220, 233.082, 246.942, 261.626, 277.183, 293.665, 311.127, 329.628, 349.228, 369.994, 391.995, 415.305, 440, 466.164, 493.883, 523.251, 554.365, 587.33, 622.254, 659.255, 698.456, 739.989, 783.991, 830.609, 880, 932.328, 987.767, 1046.502, 1108.731, 1174.659, 1244.508, 1318.51, 1396.913, 1479.978, 1567.982, 1661.219, 1760, 1864.655, 1975.533, 2093.005, 2217.461, 2349.318, 2489.016, 2637.02, 2793.826, 2959.955, 3135.963, 3322.438, 3520, 3729.31, 3951.066, 4186.009, 4434.922, 4698.636, 4978.032, 5274.041, 5587.652, 5919.911, 6271.927, 6644.875, 7040, 7458.62, 7902.133, 8372.018, 8869.844, 9397.273, 9956.063, 10548.08, 11175.3, 11839.82, 12543.85};
+
+bool switch_envControl = false;
+String control_print = "LFO";
+
+bool inRange(float val, float minimum, float maximum){
+return ((minimum <= val) && (val <= maximum));
+}
+
+void handleNoteOn(byte channel, byte pitch, byte velocity){
+  digitalWrite(3, HIGH);
+  Serial.println("NoteOn");
+  OSC1.frequency(noteFreqs[pitch] * lfoMod_pitch);
+  OSC2.frequency(noteFreqs[pitch] * lfoMod_pitch);
+  envelope1.noteOn();
+  
+}
+
+void handleNoteOff(byte channel, byte pitch, byte velocity){
+  digitalWrite(3, LOW);
+  Serial.println("NoteOff");
+  envelope1.noteOff();
+}
+
+
+
+void setup()
+{                
+  // Connect the handleNoteOn function to the library,
+  // so it is called upon reception of a NoteOn.
+  MIDI.setHandleNoteOn(handleNoteOn);  // Put only the name of the function
+  // Do the same for NoteOffs
+  MIDI.setHandleNoteOff(handleNoteOff);
+  // Initiate MIDI communications, listen to all channels
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+  
+  
+  
+  //Serial.begin(9600);
+  Serial.begin(57600);
+
+  AudioMemory(20);
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(0.9);
+
+
+  // Mixer
+  MixerA.gain(0, 0.2);
+  MixerA.gain(1, 0.2);
+
+  // OSCs
+  current_waveform_osc1 = WAVEFORM_SINE;
+  current_waveform_osc1_print = "SINE";
+  current_waveform_osc2 = WAVEFORM_SINE;
+  current_waveform_osc2_print = "SINE";
+  OSC1.begin(current_waveform_osc1);
+  OSC2.begin(current_waveform_osc2);
+  OSC1.amplitude(.2);
+  OSC2.amplitude(.2);
+  OSC1.frequency(440);
+  OSC2.frequency(440);
+  filterA.frequency(20000);
+  filterA.resonance(2);
+
+
+  // LFO Pitch
+  LfoMixer.gain(0, .5);
+  LfoMixer.gain(1, .5);
+
+  lfo2Amt.amplitude(1);
+  LFO2.amplitude(1);
+  LFO2.frequency(1);
+
+
+  // Envelope
+  envelope1.attack(50);
+  envelope1.release(150);
+  
+  
+  
+  pinMode(3, OUTPUT);  // Max Signal Poti LED
+  pinMode(4, INPUT_PULLUP);
+  pinMode(2, INPUT_PULLUP);
+  pinMode(1, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
+  
+}
+
+
+void loop()                     
+{
+
+  MIDI.read();
+  but1.update();
+  but2.update();
+  but3.update();
+  but4.update();
+
+  ////////////////////////////////////////////////////////////// controls
+
+  if (but4.fallingEdge()){
+    if(switch_envControl == true){
+      switch_envControl = false;
+      control_print = "LFO";
+      }
+    else{
+      switch_envControl = true;
+      control_print = "ENV";
+    }
+  }
+  
+  ////////////////////////////////////////////////////////////// listen to the potis
+
+
+  float temp_val1 = analogRead(pot1);
+  float temp_val2 = analogRead(pot2);
+  float temp_val3 = analogRead(pot3);
+  float temp_val4 = analogRead(pot4);
+  float temp_val5 = analogRead(pot5);
+
+
+  //Serial.println(inRange(pot1_val/temp_val1, 0.1, 1.5));
+
+  //Serial.print("testVal: ");
+  //Serial.print(pot1_val/temp_val1);
+  //Serial.print(inRange(pot1_val/temp_val1, 0.9, 1.1));
+  //Serial.print("\t");
+  //Serial.println(pot1_val/temp_val1);
+  //delay(1000);
+  pot1_val = 0.9 * pot1_val + 0.1 * analogRead(pot1);
+  pot2_val = 0.9 * pot2_val + 0.1 * analogRead(pot2);
+  pot3_val = 0.9 * pot3_val + 0.1 * analogRead(pot3);
+  pot4_val = 0.9 * pot4_val + 0.1 * analogRead(pot4);
+  pot5_val = 0.9 * pot5_val + 0.1 * analogRead(pot5);
+
+  
+
+  ////////////////////////////////////////////////////////////// scaling
+  osc1_amp = pot1_val;
+  osc2_amp = pot2_val;
+  filt1_freq = (pot3_val * (pot3_val + 1)) >> 10;
+
+  if (switch_envControl == false){
+    lfo2_freq = (pot4_val * (pot4_val + 1)) >> 10;
+    lfo2_amp = pot5_val;
+    lfo2_freq = lfo2_freq/1023 * lfo_freqMax;
+    lfo2_amp = lfo2_amp/1023;  // (-1) to (+1)
+  } else if (switch_envControl == true) {
+    env_att = pot4_val;
+    env_rel = pot5_val;
+    env_att = env_att/1023 * 1000;
+    env_rel = env_rel/1023 * 1000;
+  }
+
+  ////////////////////////////////////////////////////////////// normalization
+  osc1_amp = osc1_amp/1023;
+  osc2_amp = osc2_amp/1023;
+  filt1_freq = filt1_freq/1023 * filt_maxValue;
+  
+  
+
+  ////////////////////////////////////////////////////////////// LFO
+  if(lfoPeak.available()){
+    lfoMod = lfoPeak.read() + .5;
+    //lfoMod = lfoPeak.read();
+  } 
+
+  if (but3.fallingEdge()){
+    switch (current_LFOtarget){
+      case 0:  // Pitch
+        current_LFOtarget = 1;
+        break;
+      case 1:  // Filtfreq
+        current_LFOtarget = 0;
+        break;
+    }
+  }
+
+  if (current_LFOtarget == 0){
+    lfoMod_pitch = lfoMod;
+    lfoMod_filt = 1;
+    current_target_lfo_print = "Pitch";
+  }
+  else {
+    lfoMod_pitch = 1;
+    lfoMod_filt = lfoMod;
+    current_target_lfo_print = "FilterFreq";
+  }
+  
+  
+
+  ////////////////////////////////////////////////////////////// allocation
+  AudioNoInterrupts();
+  
+  OSC1.amplitude(osc1_amp);
+  OSC2.amplitude(osc2_amp);
+
+  //OSC1.frequency(osc1_amp * lfoMod_pitch);
+  //OSC2.frequency(osc2_amp * lfoMod_pitch);
+
+  filterA.frequency(filt1_freq * lfoMod_filt);
+
+  LFO2.frequency(lfo2_freq);
+  LFO2.amplitude(lfo2_amp);
+
+  envelope1.attack(env_att);
+  envelope1.release(env_rel);
+  AudioInterrupts();
+  ////////////////////////////////////////////////////////////// switching Waveforms
+  
+  if (but1.fallingEdge()){
+    switch (current_waveform_osc1){
+      case WAVEFORM_SINE:
+        current_waveform_osc1 = WAVEFORM_TRIANGLE;
+        current_waveform_osc1_print = "TRIANGLE";
+        break;
+      case WAVEFORM_TRIANGLE:
+        current_waveform_osc1 = WAVEFORM_SAWTOOTH;
+        current_waveform_osc1_print = "SAWTOOTH";
+        break;
+      case WAVEFORM_SAWTOOTH:
+        current_waveform_osc1 = WAVEFORM_PULSE;
+        current_waveform_osc1_print = "PULSE";
+        break;
+      case WAVEFORM_PULSE:
+        current_waveform_osc1 = WAVEFORM_SINE;
+        current_waveform_osc1_print = "SINE";
+        break;
+    }
+    AudioNoInterrupts();
+    OSC1.begin(current_waveform_osc1);
+    AudioInterrupts();
+  }
+  else if (but2.fallingEdge()){
+    switch (current_waveform_osc2){
+      case WAVEFORM_SINE:
+        current_waveform_osc2 = WAVEFORM_TRIANGLE;
+        current_waveform_osc2_print = "TRIANGLE";
+        break;
+      case WAVEFORM_TRIANGLE:
+        current_waveform_osc2 = WAVEFORM_SAWTOOTH;
+        current_waveform_osc2_print = "SAWTOOTH";
+        break;
+      case WAVEFORM_SAWTOOTH:
+        current_waveform_osc2 = WAVEFORM_PULSE;
+        current_waveform_osc2_print = "PULSE";
+        break;
+      case WAVEFORM_PULSE:
+        current_waveform_osc2 = WAVEFORM_SINE;
+        current_waveform_osc2_print = "SINE";
+        break;
+    }
+    AudioNoInterrupts();
+    OSC2.begin(current_waveform_osc2);
+    AudioInterrupts();
+  }
+  
+
+  ////////////////////////////////////////////////////////////// printing  
+  
+  Serial.print(osc1_amp);
+  Serial.print("\t");
+  Serial.print(osc2_amp);
+  Serial.print("\t");
+  Serial.print(filt1_freq);
+  Serial.print("\t");
+
+  if (switch_envControl == false){
+    Serial.print(lfo2_freq);
+    Serial.print("\t");
+    Serial.print(lfo2_amp);
+    Serial.print("\t");
+  } else{
+    Serial.print(env_att);
+    Serial.print("\t");
+    Serial.print(env_rel);
+    Serial.print("\t");
+  }
+  Serial.print("OSC1: "); Serial.print(current_waveform_osc1_print);
+  Serial.print("\t");
+  Serial.print("OSC2: "); Serial.print(current_waveform_osc2_print);
+  Serial.print("\t");
+  Serial.print("LFO target: "); Serial.print(current_target_lfo_print);
+  Serial.print("\t");
+  Serial.print("Control: "); Serial.println(control_print);
+  Serial.println(lfoMod);
+
+
+  ////////////////////////////////////////////////////////////// Max Signal Poti LED
+  if (pot1_val >= 1000 || pot2_val >= 1000 || pot3_val >= 1000 || pot4_val >= 1000 || pot5_val >= 1000)
+    digitalWrite(3, HIGH);
+  else
+    digitalWrite(3, LOW);
+  
+
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

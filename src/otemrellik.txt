@@ -1,0 +1,781 @@
+// Project maiX
+// code based on Otem Rellik
+// https://github.com/otem/RDEI/blob/master/Nimbus/Nimbus.ino
+
+// TO-DO
+//    - Audio-Input
+//    - FX
+//    - SD-Card / Sounds
+//    - USB-Midi
+
+
+
+#include <Arduino.h>
+  
+#include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+// GUItool: begin automatically generated code
+AudioSynthWaveform       voiceOneB;      //xy=112.5,462.5
+AudioSynthWaveform       voiceTwoB;      //xy=112.5,496.5
+AudioSynthWaveform       voiceTwoD;      //xy=114.5,917.5
+AudioSynthWaveform       voiceOneD;      //xy=115.5,881.5
+AudioSynthWaveform       voiceThreeB;    //xy=117.5,532.5
+AudioSynthNoiseWhite     noiseVoiceB;    //xy=118.5,566.5
+AudioSynthWaveform       voiceThreeD;    //xy=117.5,952.5
+AudioSynthNoiseWhite     noiseVoiceD;    //xy=117.5,986.5
+AudioSynthWaveform       voiceTwoC;      //xy=135.5,717.5
+AudioSynthWaveform       voiceOneC;      //xy=136.5,682.5
+AudioSynthNoiseWhite     noiseVoiceC;    //xy=136.5,789.5
+AudioSynthWaveform       voiceThreeC;    //xy=139.5,753.5
+AudioSynthWaveform       voiceOneA;      //xy=179.5,172.5
+AudioSynthWaveform       voiceTwoA;      //xy=179.5,208.5
+AudioSynthNoiseWhite     noiseVoiceA;    //xy=180.5,283.5
+AudioSynthWaveform       voiceThreeA;    //xy=183.5,245.5
+AudioMixer4              voiceMixerB;    //xy=292.5,527.5
+AudioSynthWaveformDc     envelopeB;      //xy=302.5,472.5
+AudioSynthWaveformDc     envelopeC;      //xy=303.5,689.5
+AudioMixer4              voiceMixerC;    //xy=303.5,749.5
+AudioMixer4              voiceMixerD;    //xy=304.5,942.5
+AudioSynthWaveformDc     envelopeD;      //xy=313.5,878.5
+AudioMixer4              voiceMixerA;    //xy=360.5,236.5
+AudioSynthWaveformDc     envelopeA;      //xy=364.5,178.5
+AudioEffectMultiply      multiplyB;      //xy=451.5,499.5
+AudioEffectMultiply      multiplyC;      //xy=463.5,720.5
+AudioEffectMultiply      multiplyD;      //xy=463.5,907.5
+AudioSynthWaveform       LFO1;           //xy=482.5,642.5
+AudioEffectMultiply      multiplyA;      //xy=521.5,226.5
+AudioSynthWaveformDc     filterEnvD;     //xy=544.5,985.5
+AudioSynthWaveformDc     filterEnvB;     //xy=574.5,547.5
+AudioSynthWaveformDc     filterEnvA;     //xy=579.5,317.5
+AudioSynthWaveformDc     filterEnvC;     //xy=585.5,764.5
+AudioMixer4              filterModMixerD; //xy=702.5,1048.5
+AudioMixer4              filterModMixerB; //xy=727.5,599.5
+AudioMixer4              filterModMixerA; //xy=732.5,347.5
+AudioMixer4              filterModMixerC; //xy=737.5,822.5
+AudioSynthWaveformDc     lfo2Amt;        //xy=775.5,57.5
+AudioSynthWaveformSine   LFO2;           //xy=775.5,104.5
+AudioFilterStateVariable filterA;        //xy=897.5,306.5
+AudioFilterStateVariable filterD;        //xy=900.5,969.5
+AudioFilterStateVariable filterB;        //xy=908.5,545.5
+AudioAnalyzePeak         peakC;          //xy=908.5,647.5
+AudioFilterStateVariable filterC;        //xy=908.5,737.5
+AudioAnalyzePeak         peakD;          //xy=908.5,883.5
+AudioAnalyzePeak         peakA;          //xy=912.5,237.5
+AudioAnalyzePeak         peakB;          //xy=930.5,429.5
+AudioMixer4              LfoMixer;       //xy=932.5,107.5
+AudioAnalyzePeak         lfoPeak;        //xy=1089.5,101.5
+AudioInputI2S            i2s2; //xy=1088.750015258789,427.50000607967377
+AudioMixer4              finalMixer;     //xy=1113.5,564.5
+AudioMixer4              mixer1;         //xy=1276.25,370
+AudioAnalyzePeak         finalPeak;      //xy=1311.5,651.5
+AudioOutputI2S           i2s1;           //xy=1317.5,563.5
+AudioConnection          patchCord1(voiceOneB, 0, voiceMixerB, 0);
+AudioConnection          patchCord2(voiceTwoB, 0, voiceMixerB, 1);
+AudioConnection          patchCord3(voiceTwoD, 0, voiceMixerD, 1);
+AudioConnection          patchCord4(voiceOneD, 0, voiceMixerD, 0);
+AudioConnection          patchCord5(voiceThreeB, 0, voiceMixerB, 2);
+AudioConnection          patchCord6(noiseVoiceB, 0, voiceMixerB, 3);
+AudioConnection          patchCord7(voiceThreeD, 0, voiceMixerD, 2);
+AudioConnection          patchCord8(noiseVoiceD, 0, voiceMixerD, 3);
+AudioConnection          patchCord9(voiceTwoC, 0, voiceMixerC, 1);
+AudioConnection          patchCord10(voiceOneC, 0, voiceMixerC, 0);
+AudioConnection          patchCord11(noiseVoiceC, 0, voiceMixerC, 3);
+AudioConnection          patchCord12(voiceThreeC, 0, voiceMixerC, 2);
+AudioConnection          patchCord13(voiceOneA, 0, voiceMixerA, 0);
+AudioConnection          patchCord14(voiceTwoA, 0, voiceMixerA, 1);
+AudioConnection          patchCord15(noiseVoiceA, 0, voiceMixerA, 3);
+AudioConnection          patchCord16(voiceThreeA, 0, voiceMixerA, 2);
+AudioConnection          patchCord17(voiceMixerB, 0, multiplyB, 1);
+AudioConnection          patchCord18(envelopeB, 0, multiplyB, 0);
+AudioConnection          patchCord19(envelopeC, 0, multiplyC, 0);
+AudioConnection          patchCord20(voiceMixerC, 0, multiplyC, 1);
+AudioConnection          patchCord21(voiceMixerD, 0, multiplyD, 1);
+AudioConnection          patchCord22(envelopeD, 0, multiplyD, 0);
+AudioConnection          patchCord23(voiceMixerA, 0, multiplyA, 1);
+AudioConnection          patchCord24(envelopeA, 0, multiplyA, 0);
+AudioConnection          patchCord25(multiplyB, 0, filterB, 0);
+AudioConnection          patchCord26(multiplyC, 0, filterC, 0);
+AudioConnection          patchCord27(multiplyD, 0, filterD, 0);
+AudioConnection          patchCord28(LFO1, 0, filterModMixerA, 1);
+AudioConnection          patchCord29(LFO1, 0, filterModMixerB, 1);
+AudioConnection          patchCord30(LFO1, 0, filterModMixerC, 1);
+AudioConnection          patchCord31(LFO1, 0, filterModMixerD, 1);
+AudioConnection          patchCord32(multiplyA, 0, filterA, 0);
+AudioConnection          patchCord33(filterEnvD, 0, filterModMixerD, 0);
+AudioConnection          patchCord34(filterEnvB, 0, filterModMixerB, 0);
+AudioConnection          patchCord35(filterEnvA, 0, filterModMixerA, 0);
+AudioConnection          patchCord36(filterEnvC, 0, filterModMixerC, 0);
+AudioConnection          patchCord37(filterModMixerD, 0, filterD, 1);
+AudioConnection          patchCord38(filterModMixerB, 0, filterB, 1);
+AudioConnection          patchCord39(filterModMixerA, 0, filterA, 1);
+AudioConnection          patchCord40(filterModMixerC, 0, filterC, 1);
+AudioConnection          patchCord41(lfo2Amt, 0, LfoMixer, 0);
+AudioConnection          patchCord42(LFO2, 0, LfoMixer, 1);
+AudioConnection          patchCord43(filterA, 0, finalMixer, 0);
+AudioConnection          patchCord44(filterA, 0, peakA, 0);
+AudioConnection          patchCord45(filterD, 0, finalMixer, 3);
+AudioConnection          patchCord46(filterD, 0, peakD, 0);
+AudioConnection          patchCord47(filterB, 0, finalMixer, 1);
+AudioConnection          patchCord48(filterB, 0, peakB, 0);
+AudioConnection          patchCord49(filterC, 0, finalMixer, 2);
+AudioConnection          patchCord50(filterC, 0, peakC, 0);
+AudioConnection          patchCord51(LfoMixer, lfoPeak);
+AudioConnection          patchCord52(i2s2, 0, mixer1, 0);
+AudioConnection          patchCord53(i2s2, 1, mixer1, 1);
+AudioConnection          patchCord54(finalMixer, finalPeak);
+AudioConnection          patchCord55(finalMixer, 0, mixer1, 2);
+AudioConnection          patchCord56(mixer1, 0, i2s1, 0);
+AudioConnection          patchCord57(mixer1, 0, i2s1, 1);
+AudioControlSGTL5000     sgtl5000_1;     //xy=1096.5,145.5
+// GUItool: end automatically generated code
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//======================================PINS=========================================//
+
+//======Teensy 
+
+// 0  = MIDI - receive
+// 1  = S0 - MUX
+// 2  = S1 - MUX
+// 3  = S2 - MUX
+// 4  = 
+// 5  = 
+// 6  = AUDIO BOARD
+// 7  = AUDIO BOARD
+// 8  = AUDIO BOARD
+// 9  = 
+// 10 = AUDIO BOARD
+// 11 = AUDIO BOARD
+// 12 = AUDIO BOARD
+
+// 13 = AUDIO BOARD
+// 14 = SIG - MUX
+// 15 = AUDIO BOARD
+// 16 = 
+// 17 = 
+// 18 = AUDIO BOARD
+// 19 = AUDIO BOARD
+// 20 = AUDIO BOARD
+// 21 = AUDIO BOARD
+// 22 = 
+// 23 = AUDIO BOARD
+// 24 = 
+// 25 = 
+// 26 = 
+// 27 = 
+// 28 = 
+// 29 = 
+// 30 = 
+// 32 = 
+// 33 = 
+
+//======Mux
+
+// 0  = testPot1
+// 1  = testPot2
+// 2  = testPot3
+// 3  = testPot4
+// 4  = testPot5
+// 5  = 
+// 6  = 
+// 7  = 
+// 8  = 
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+#include <Bounce.h>
+#include <Adafruit_NeoPixel.h>
+#include <Metro.h>
+#include <MIDI.h>
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+/*
+//Pixels
+#define PIXEL_PIN 2
+#define NUMPIXELS 12
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+*/
+
+/*
+//Encoder
+int encoderPin1 = 21;
+int encoderPin2 = 24;
+volatile int lastEncoded = 0;
+volatile long encoderValue = 0;
+int scaledEncVal;
+int prevScaledEncVal;
+*/
+
+/*
+//Touch Pins
+bool noteTouched[8];
+int noteTouchPins[8] = {0,1,15,16,17,25,32,33};
+float noteCurrent[8];
+*/
+
+//Switches/EncoderBtn
+Bounce btnSwBouncers[5] = {
+    Bounce(4,10),
+    Bounce(5,10),
+    Bounce(9,10),
+    Bounce(24,10),
+    Bounce(25,10),
+};
+int btnSwPins[5] = {4,5,9,24,25};
+int NUMBEROFSWITCHES;
+
+//Mux control pins
+int s0 = 1;
+int s1 = 2;
+int s2 = 3;
+//Mux in "SIG" pin
+int SIG_pin = 14;
+
+//Knobs
+float analogValues[8]; 
+float analogValuesLag[8];
+
+//FirstRunFlag
+bool firstRun;
+
+//memoryCard
+const int chipSelect = 10;
+
+
+//Synth Params
+
+float rawVals[20];
+
+float finalAmp;
+float voiceAPeak;
+float voiceBPeak;
+float voiceCPeak;
+float voiceDPeak;
+
+int scale;
+
+float frequency;
+
+int attackTime = 10;
+int releaseTime = 10;
+float lfoAmt;
+float lfoFreq;
+int lfoTimeMathArray[5] = {250, 500, 1000, 2000, 4000};
+int lfoIndex;
+float seqInterval;
+float lfoTwoAmt;
+float lfoTwoFreq;
+float lfoPitchMod;
+float octave[4] = {.25,.5,1,2};
+int midiOctave[4] = {-24, -12, 0, 12};
+int octaveKey;
+int filterFreq;
+float filterRes;
+float masterDetune;
+float plusDetune;
+float minusDetune;
+unsigned long filterEnvAttack;
+unsigned long filterEnvRelease;
+
+float voices[4];
+float VoiceFreq[4];
+float VoiceVel[4];
+float voiceMod;
+
+float ampArray[4];
+int voiceNum;
+//float currentVel;
+
+
+int indicatorIndex;
+
+
+
+void endVoice(float frequency){
+  for (int i = 0; i < 4; ++i){
+    if(VoiceFreq[i] == frequency){
+      voices[i] = 0;
+    }
+  }
+}
+
+int lowestAmp(){
+  int index = 0;
+  for (int i = 0; i < 4; i++){
+    if (ampArray[i] < ampArray[index]) {
+      index = i;
+    }
+  }
+  return index;
+}
+
+
+void startVoice(float frequency, float velocity){
+  // for (int i = 0; i < 4; ++i){
+  //   if (!voices[i]){
+  //     voices[i] = frequency;
+  //     VoiceFreq[i] = frequency;
+  //     VoiceVel[i] = velocity;
+  //     if (voices[i]){
+  //       return;
+  //     }
+  //   }
+  // }
+
+  voiceNum = lowestAmp();
+  //if voice is already in use scan to next voice
+  for (int i = 0; i < 4; ++i){
+    if (voices[voiceNum]){
+      voiceNum++;
+      if (voiceNum > 3){
+        voiceNum = 0;
+      }
+    }
+  }
+  //Assign (unused voice || lowest voice)
+  voices[voiceNum] = frequency;
+  VoiceFreq[voiceNum] = voices[voiceNum];
+  VoiceVel[voiceNum] = velocity;
+
+}
+
+
+
+void setMuxPin(int channel){
+  int controlPin[] = {s2, s1, s0};
+
+  int muxChannel[8][3]={
+    {0,0,0}, //channel 0
+    {0,0,1}, //channel 1
+    {0,1,0}, //channel 2
+    {0,1,1}, //channel 3
+    {1,0,0}, //channel 4
+    {1,0,1}, //channel 5
+    {1,1,0}, //channel 6
+    {1,1,1}  //channel 7
+  };
+
+  //loop through the 4 sig
+  for(int i = 0; i < 3; i ++){
+    digitalWrite(controlPin[i], muxChannel[channel][i]);
+  }
+}
+
+void setVoceOneShape (bool saw){
+  if (saw){
+    voiceOneA.begin(WAVEFORM_SAWTOOTH);
+    voiceOneB.begin(WAVEFORM_SAWTOOTH);
+    voiceOneC.begin(WAVEFORM_SAWTOOTH);
+    voiceOneD.begin(WAVEFORM_SAWTOOTH);
+  }else{
+    voiceOneA.begin(WAVEFORM_SQUARE);
+    voiceOneB.begin(WAVEFORM_SQUARE);
+    voiceOneC.begin(WAVEFORM_SQUARE);
+    voiceOneD.begin(WAVEFORM_SQUARE);
+  }
+}
+void setVoceTwoShape (bool saw){
+  if (saw){
+    voiceTwoA.begin(WAVEFORM_SAWTOOTH);
+    voiceTwoB.begin(WAVEFORM_SAWTOOTH);
+    voiceTwoC.begin(WAVEFORM_SAWTOOTH);
+    voiceTwoD.begin(WAVEFORM_SAWTOOTH);
+  }else{
+    voiceTwoA.begin(WAVEFORM_SQUARE);
+    voiceTwoB.begin(WAVEFORM_SQUARE);
+    voiceTwoC.begin(WAVEFORM_SQUARE);
+    voiceTwoD.begin(WAVEFORM_SQUARE);
+  }
+}
+void setVoceThreeShape (bool saw){
+  if (saw){
+    voiceThreeA.begin(WAVEFORM_TRIANGLE);
+    voiceThreeB.begin(WAVEFORM_TRIANGLE);
+    voiceThreeC.begin(WAVEFORM_TRIANGLE);
+    voiceThreeD.begin(WAVEFORM_TRIANGLE);
+  }else{
+    voiceThreeA.begin(WAVEFORM_SQUARE);
+    voiceThreeB.begin(WAVEFORM_SQUARE);
+    voiceThreeC.begin(WAVEFORM_SQUARE);
+    voiceThreeD.begin(WAVEFORM_SQUARE);
+  }
+}
+void setLfoShape(bool sine){
+  if (sine){
+    LFO1.begin(WAVEFORM_SINE);
+  }else{
+    LFO1.begin(WAVEFORM_SAWTOOTH_REVERSE);
+  }
+}
+
+
+void setSynthParams(int number, float value){
+  
+  if (number < 4){
+    
+    voiceMixerA.gain(number, value/2046);
+    voiceMixerB.gain(number, value/2046);
+    voiceMixerC.gain(number, value/2046);
+    voiceMixerD.gain(number, value/2046);
+   /*
+    voiceMixerA.gain(number, 0.5);
+    voiceMixerB.gain(number, 0.5);
+    voiceMixerC.gain(number, 0.5);
+    voiceMixerD.gain(number, 0.5);
+    */
+  }else if(number == 4){
+      LFO2.frequency(value/130);
+  }else if(number == 5){
+      LFO2.amplitude(value/32736);
+  }else if(number == 6){
+    masterDetune = value;
+    plusDetune = map(masterDetune, 0, 1023, 1, 1.5);
+    minusDetune = map(masterDetune, 0, 1023, 1, .75);
+  }else if(number == 7){
+    lfoFreq = value/120;
+  }else if(number == 8){
+    lfoAmt = value/1023;
+  }else if(number == 9){
+    attackTime = value * 2;
+  }else if(number == 10){
+    releaseTime = value * 2;
+  }else if(number == 11){
+    filterEnvAttack = value * 2;
+  }else if(number == 12){
+    filterEnvRelease = value * 2;
+  }else if(number == 13){
+    filterFreq = (value * 10) + 100;
+  }else if(number == 14){
+    filterRes = (value / 255) + 1.10;
+  }else if(number == 15){
+    octaveKey = value/255;
+    octaveKey = constrain(octaveKey, 0, 3);
+  }else if(number == 16){
+    setVoceOneShape(value);
+  }else if(number == 17){
+    setVoceTwoShape(value);
+  }else if(number == 18){
+    setVoceThreeShape(value);
+  }else if (number == 19){
+    setLfoShape(value);
+  }
+}
+
+
+//START MIDI
+/*
+void OnControlChange(byte channel, byte control, byte value){
+  setSynthParams(control-1, value * 8.055);
+  rawVals[control-1] = value * 8.055;
+  paramLocks[control-1] = true;
+}
+*/
+
+void OnNoteOn(byte channel, byte note, byte velocity){
+  float freq = 440.0 * powf(2.0, (float)(note - 69) * 0.08333333);
+  float vel = (float)velocity/127;
+  startVoice(freq, vel);
+
+  Serial.println("notein");
+  Serial.println(note);
+  Serial.println(velocity);
+}
+
+void OnNoteOff(byte channel, byte note, byte velocity){
+  float freq = 440.0 * powf(2.0, (float)(note - 69) * 0.08333333);
+  endVoice(freq);
+  Serial.println("noteoff");
+}
+//END MIDI
+
+
+
+void setup() {
+
+  
+
+  AudioMemory(64);
+  sgtl5000_1.enable();
+  sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
+  sgtl5000_1.volume(.4);
+
+  Serial.begin(9600);
+  Serial.println("test Startup print");
+
+  //MIDI
+  /*
+  usbMIDI.setHandleNoteOff(OnNoteOff);
+  usbMIDI.setHandleNoteOn(OnNoteOn);
+  usbMIDI.setHandleControlChange(OnControlChange);
+  */
+
+  MIDI.setHandleNoteOff(OnNoteOff);
+  MIDI.setHandleNoteOn(OnNoteOn);
+  //MIDI.setHandleControlChange(OnControlChange);
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+
+
+/*
+  //SD
+  SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
+  SPI.setSCK(14);  // Audio shield has SCK on pin 14
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(chipSelect)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("initialization done."); 
+*/
+
+
+  //lfoMixer
+  LfoMixer.gain(0,.5);
+  LfoMixer.gain(1,.5);
+
+  lfo2Amt.amplitude(1);
+  LFO2.amplitude(1);
+  LFO2.frequency(1);
+
+  //finalMixer
+  finalMixer.gain(0,.25);
+  finalMixer.gain(1,.25);
+  finalMixer.gain(2,.25);
+  finalMixer.gain(3,.25);
+
+    //finaltestMixer
+  finalMixer.gain(0,.25);
+  finalMixer.gain(1,.25);
+  finalMixer.gain(2,.25);
+  finalMixer.gain(3,.25);
+
+  //Voice 1
+  voiceOneA.amplitude(.25);
+  voiceOneB.amplitude(.25);
+  voiceOneC.amplitude(.25);
+  voiceOneD.amplitude(.25);
+  //Voice 2
+  voiceTwoA.amplitude(.25);
+  voiceTwoB.amplitude(.25);
+  voiceTwoC.amplitude(.25);
+  voiceTwoD.amplitude(.25);
+  //Voice 3
+  voiceThreeA.amplitude(.25);
+  voiceThreeB.amplitude(.25);
+  voiceThreeC.amplitude(.25);
+  voiceThreeD.amplitude(.25);
+  //noise
+  noiseVoiceA.amplitude(.125);
+  noiseVoiceB.amplitude(.125);
+  noiseVoiceC.amplitude(.125);
+  noiseVoiceD.amplitude(.125);
+  //LFO
+  LFO1.begin(.7,.5,WAVEFORM_SAWTOOTH_REVERSE);
+
+  //filter
+  filterA.octaveControl(2.5);
+  filterB.octaveControl(2.5);
+  filterC.octaveControl(2.5);
+  filterD.octaveControl(2.5);
+
+
+  //Switches/EncoderBtn
+  pinMode(btnSwPins[0], INPUT_PULLUP);
+  pinMode(btnSwPins[1], INPUT_PULLUP);
+  pinMode(btnSwPins[2], INPUT_PULLUP);
+  pinMode(btnSwPins[3], INPUT_PULLUP);
+  pinMode(btnSwPins[4], INPUT_PULLUP);
+
+  //Mux
+  pinMode(s0, OUTPUT); 
+  pinMode(s1, OUTPUT); 
+  pinMode(s2, OUTPUT); 
+  pinMode(SIG_pin, INPUT);
+  digitalWrite(s0, LOW);
+  digitalWrite(s1, LOW);
+  digitalWrite(s2, LOW);
+
+  firstRun = true;
+
+}
+
+void loop(){
+
+  Serial.println("test");
+  MIDI.read();
+
+  //Knobs
+  for (int i = 0; i < 8; ++i){
+    setMuxPin(i);
+    analogValues[i] = analogRead(SIG_pin);
+
+    rawVals[i] = analogValues[i];
+
+    setSynthParams(i, analogValues[i]);
+        
+  }
+
+  //Switches/EncoderBtn
+  for (int i = 0; i < NUMBEROFSWITCHES; ++i){
+    if (btnSwBouncers[i].update() || firstRun){
+      if (i<4){
+        rawVals[i + 16] = digitalRead(btnSwPins[i]);
+      }
+      switch (i) {
+        case 0:
+          setVoceOneShape(digitalRead(btnSwPins[i]));
+          break;
+        case 1:
+          setVoceTwoShape(digitalRead(btnSwPins[i]));
+          break;
+        case 2:
+          setVoceThreeShape(digitalRead(btnSwPins[i]));
+            break;
+        case 3:
+          setLfoShape(digitalRead(btnSwPins[i]));
+          break;
+        case 4:
+          // for the other Switch
+          break;
+      }
+    }
+  }
+
+
+  //Voice Stuff
+  for (int i = 0; i < 4; ++i){
+
+    if(i == 0){//VoiceA
+      voiceOneA.frequency(VoiceFreq[i] * lfoPitchMod);
+      voiceTwoA.frequency(VoiceFreq[i] * plusDetune * lfoPitchMod);
+      voiceThreeA.frequency(VoiceFreq[i] * minusDetune * lfoPitchMod); 
+      //Env
+      if(voices[i]){
+        Serial.print("Vel VoiceA ");
+        Serial.println(VoiceVel[i]);
+        envelopeA.amplitude(VoiceVel[i], attackTime);
+        filterEnvA.amplitude(VoiceVel[i],filterEnvAttack);
+      }else{
+        envelopeA.amplitude(0, releaseTime);
+        filterEnvA.amplitude(-1,filterEnvRelease);
+      }
+    }else if(i == 1){//VoiceB
+      voiceOneB.frequency(VoiceFreq[i] * lfoPitchMod);
+      voiceTwoB.frequency(VoiceFreq[i] * plusDetune * lfoPitchMod);
+      voiceThreeB.frequency(VoiceFreq[i] * minusDetune * lfoPitchMod); 
+      //Env
+      if(voices[i]){
+        envelopeB.amplitude(VoiceVel[i], attackTime);
+        filterEnvB.amplitude(VoiceVel[i],filterEnvAttack);
+      }else{
+        envelopeB.amplitude(0, releaseTime);
+        filterEnvB.amplitude(-1,filterEnvRelease);
+      }      
+    }else if(i == 2){//VoiceC
+      voiceOneC.frequency(VoiceFreq[i] * lfoPitchMod);
+      voiceTwoC.frequency(VoiceFreq[i] * plusDetune * lfoPitchMod);
+      voiceThreeC.frequency(VoiceFreq[i] * minusDetune * lfoPitchMod); 
+      //Env
+      if(voices[i]){
+        envelopeC.amplitude(VoiceVel[i], attackTime);
+        filterEnvC.amplitude(VoiceVel[i],filterEnvAttack);
+      }else{
+        envelopeC.amplitude(0, releaseTime);
+        filterEnvC.amplitude(-1,filterEnvRelease);
+      }      
+    }else if(i == 3){//VoiceD
+      voiceOneD.frequency(VoiceFreq[i] * lfoPitchMod);
+      voiceTwoD.frequency(VoiceFreq[i] * plusDetune * lfoPitchMod);
+      voiceThreeD.frequency(VoiceFreq[i] * minusDetune * lfoPitchMod); 
+      //Env
+      if(voices[i]){
+        envelopeD.amplitude(VoiceVel[i], attackTime);
+        filterEnvD.amplitude(VoiceVel[i],filterEnvAttack);
+      }else{
+        envelopeD.amplitude(0, releaseTime);
+        filterEnvD.amplitude(-1,filterEnvRelease);
+      }      
+    }
+  } 
+
+  //LFO
+  LFO1.frequency(lfoFreq);
+  LFO1.amplitude(lfoAmt);
+  //Filter
+  filterFreq = 1000;
+  filterRes = 0.7;
+  filterA.frequency(filterFreq);
+  filterA.resonance(filterRes);
+  filterB.frequency(filterFreq);
+  filterB.resonance(filterRes);  
+  filterC.frequency(filterFreq);
+  filterC.resonance(filterRes); 
+  filterD.frequency(filterFreq);
+  filterD.resonance(filterRes); 
+  //LFO2
+  if(lfoPeak.available()){
+    lfoPitchMod = lfoPeak.read() + .5;
+  } 
+  //voiceA
+  if (peakA.available()){
+    voiceAPeak = peakA.read();
+    ampArray[0] = voiceAPeak;
+  }
+  //voiceB
+  if (peakB.available()){
+    voiceBPeak = peakB.read();
+     ampArray[1] = voiceBPeak;
+  }
+  //voiceC
+  if (peakC.available()){
+    voiceCPeak = peakC.read();
+    ampArray[2] = voiceCPeak;
+  }
+  //voiceD
+  if (peakD.available()){
+    voiceDPeak = peakD.read();
+    ampArray[3] = voiceDPeak;
+  }
+  //FinalPeak
+  if (finalPeak.available()){
+    finalAmp = finalPeak.read();
+  }
+
+  firstRun = false;
+
+  // Test print
+
+  Serial.print(analogValues[0]);
+  Serial.print("\t");
+  Serial.print(analogValues[1]);
+  Serial.print("\t");
+  Serial.print(analogValues[2]);
+  Serial.print("\t");
+  Serial.print(analogValues[3]);
+  Serial.print("\t");
+  Serial.println(analogValues[4]);
+
+
+
+
+
+}
+
+
