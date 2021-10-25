@@ -14,12 +14,19 @@
 
 
 #include <Arduino.h>
-  
+
 #include <Audio.h>
 #include <Wire.h>
+#include <Bounce.h>
+//#include <Adafruit_NeoPixel.h>
+#include <Metro.h>
+#include <MIDI.h>
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
+#include <string>
+  
+
 
 // GUItool: begin automatically generated code
 AudioSynthWaveform       voiceOneB;      //xy=1350,1003
@@ -201,10 +208,10 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=2334,686
 // 25 = DELAY_1           (17)    - linear
 // 26 = DELAY_2           (18)    - linear  immo: play Sample
 // 27 = DELAY_3           (19)    - linear
-// 28 = LED or switch???
-// 29 = LED ???
-// 30 = LED ???
-// 31 = LED ???
+// 28 = Sample_sel       
+// 29 = Sample_play
+// 30 = LED_LFO_1
+// 31 = LED_LFO_2
 // 32 = LED ???
 // 33 = LED ???
 
@@ -282,6 +289,12 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=2334,686
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
+
+#include <Audio.h>
+#include <Wire.h>
+
+#include <string>
+
 //MIDI_CREATE_DEFAULT_INSTANCE();
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
@@ -315,16 +328,17 @@ float noteCurrent[8];
 */
 
 //Switches/EncoderBtn
-Bounce btnSwBouncers[6] = {
+Bounce btnSwBouncers[7] = {
     Bounce(4,10),
     Bounce(5,10),
     Bounce(9,10),
     Bounce(17,10),
     Bounce(22,10),
-    Bounce(26,15),
+    Bounce(28,15),
+    Bounce(29,15),
 };
-int btnSwPins[6] = {4,5,9,17,22,26};
-int NUMBEROFSWITCHES = 6;
+int btnSwPins[7] = {4,5,9,17,22,28,29};
+int NUMBEROFSWITCHES = 7;
 
 //Mux control pins
 int s0 = 1;
@@ -393,6 +407,14 @@ int voiceNum;
 
 
 int indicatorIndex;
+
+// global vars for playing sample
+File SDfile;
+int SDzaehler = 0;
+String *filesList;
+
+int numoffiles = 0;
+int *p_numoffiles = &numoffiles;
 
 
 
@@ -523,8 +545,41 @@ void setLfo2Shape(bool sine){
 void playSample(bool button){
   if (button){
     Serial.println("Start playing");
-    playSdWav1.play("SDTEST2.WAV");
+    playSdWav1.play(filesList[(SDzaehler % ((*p_numoffiles-1)/2)) + (*p_numoffiles-1)/2 + 1].c_str());  
   }
+}
+
+String *getListOfFiles(File dir, int *numoffiles) {
+  
+  while (true) {
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      Serial.print("Number of files: ");
+      Serial.println(*numoffiles);
+      break;
+    }
+    ++*numoffiles;
+    Serial.println(entry.name());
+    entry.close();
+  }
+
+  dir.rewindDirectory();
+  
+  //String fileList[numoffiles];
+  String * fileList = new String[*numoffiles];
+
+  for (int i=0; i< *numoffiles; i++){
+    File entry =  dir.openNextFile();
+    fileList[i] = entry.name();
+    entry.close();
+  }
+
+  Serial.println("start printing list------");
+  for (int i=0; i< *numoffiles; i++){
+    Serial.println(fileList[i]);
+  }
+  return fileList;
 }
 
 
@@ -632,6 +687,16 @@ void setup() {
     }
   }
 
+  // SD Card
+
+  SDfile = SD.open("/");
+  filesList = getListOfFiles(SDfile, p_numoffiles);
+
+  
+
+
+
+
   //MIDI
   /*
   usbMIDI.setHandleNoteOff(OnNoteOff);
@@ -646,19 +711,6 @@ void setup() {
 
   usbMIDI.setHandleNoteOff(OnNoteOff);
   usbMIDI.setHandleNoteOn(OnNoteOn);
-
-
-/*
-  //SD
-  SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
-  SPI.setSCK(14);  // Audio shield has SCK on pin 14
-  Serial.print("Initializing SD card...");
-  if (!SD.begin(chipSelect)) {
-    Serial.println("initialization failed!");
-    return;
-  }
-  Serial.println("initialization done."); 
-*/
 
 
   //lfoMixer
@@ -766,6 +818,7 @@ void setup() {
   pinMode(btnSwPins[3], INPUT_PULLUP);
   pinMode(btnSwPins[4], INPUT_PULLUP);
   pinMode(btnSwPins[5], INPUT_PULLUP);
+  pinMode(btnSwPins[6], INPUT_PULLUP);
 
   //Mux
   pinMode(s0, OUTPUT); 
@@ -858,7 +911,10 @@ void loop(){
           setLfoShape(digitalRead(btnSwPins[i]));
           Serial.print("testCase4");
           break;
-        case 5:
+        case 5:  //select sample
+          SDzaehler++;
+          break;
+        case 6:  //play sample
           playSample(btnSwBouncers[i].fallingEdge());
           break;
       }
