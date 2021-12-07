@@ -863,12 +863,12 @@ void loop(){
   //Testing 
 
   
-  setSynthParams(5, 1023);
-  setSynthParams(6, 32736);
-  setSynthParams(13, 1023);
-  setSynthParams(15, 0);
-  setSynthParams(5, 0);
-  setSynthParams(7, 0);
+  //setSynthParams(5, 1023);
+  //setSynthParams(6, 32736);
+  //setSynthParams(13, 1023);
+  //setSynthParams(15, 0);
+  //setSynthParams(5, 0);
+  //setSynthParams(7, 0);
   //setSynthParams(10, 1000);
   /*
   //setMuxPin(4);  // fifth knob at the board 
